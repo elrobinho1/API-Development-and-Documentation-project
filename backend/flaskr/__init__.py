@@ -207,35 +207,36 @@ def create_app(test_config=None):
     and shown whether they were correct or not.
     """
     @app.route('/quizzes', methods=['POST'])
-    def play_quiz():
+    def test_play():
+        # get request body
+        body = request.get_json()
 
-        try:
+        # get quize category and previous questions
+        category = body.get('quiz_category')
+        previous_questions = body.get('previous_questions')
 
-            body = request.get_json()
+        # if previous questions not found, abort 400 if category or previous questions isn't found
+        if ((category is None) or (previous is None)):
+            abort(400)
 
-            if not ('quiz_category' in body and 'previous_questions' in body):
-                abort(422)
+        # return all question
+        if (category['id'] == 0):
+            all_questions = Question.query.all()
 
-            category = body.get('quiz_category')
-            previous_questions = body.get('previous_questions')
+        else:
+            # filter questions by category
+            all_questions = Question.query.filter_by(category=category['id']).all()
 
-            if category['type'] == 'click':
-                available_questions = Question.query.filter(
-                    Question.id.notin_((previous_questions))).all()
-            else:
-                available_questions = Question.query.filter_by(
-                    category=category['id']).filter(Question.id.notin_((previous_questions))).all()
+        # total number of question
+        total_questions = len(questions)
+        # return any random question in all_questions
+        def random_question():
+            return all_questions[random.randrange(0, total_questions, 1)]
 
-            new_question = available_questions[random.randrange(
-                0, len(available_questions))].format() if len(available_questions) > 0 else None
-
-            return jsonify({
-                'success': True,
-                'question': new_question
-            })
-        except:
-            abort(422)
-
+        return jsonify({
+            'success': True,
+            'question': new_question
+        })
 
     """
     @TODO:
