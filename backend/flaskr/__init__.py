@@ -208,34 +208,31 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes', methods=['POST'])
     def test_play():
-        # get request body
-        body = request.get_json()
 
         # get quize category and previous questions
-        category = body.get('quiz_category')
-        previous_questions = body.get('previous_questions')
+        category = request.get_json().get('quiz_category')
+        previous_questions = request.get_json().get('previous_questions')
 
-        # if previous questions not found, abort 400 if category or previous questions isn't found
-        if ((category is None) or (previous is None)):
-            abort(400)
+        # abort 404 if category or previous questions is not found
+        body = request.get_json()
+        if ( 'quiz_category' not in body and 'previous_questions' not in body):
+            abort(404)
 
         # return all question
-        if (category['id'] == 0):
+        if category['id'] == 0:
             all_questions = Question.query.all()
 
         else:
-            # filter questions by category
             all_questions = Question.query.filter_by(category=category['id']).all()
 
         # total number of question
         total_questions = len(questions)
-        # return any random question in all_questions
-        def random_question():
-            return all_questions[random.randrange(0, total_questions, 1)]
+
+        new_questions = all_questions[random.randrange(0, total_questions, 1)].format()
 
         return jsonify({
             'success': True,
-            'question': new_question
+            'question': new_questions
         })
 
     """
